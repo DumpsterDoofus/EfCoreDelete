@@ -2,9 +2,9 @@
 
 namespace EfCoreDeleteBug
 {
-    public class Entity
-    {
-        [Key]
-        public int Id { get; set; }
-    }
+public class Entity
+{
+    [Key]
+    public int Id { get; set; }
+}
 }

@@ -8,53 +8,66 @@ namespace EfCoreDeleteBug
     {
         public static void Main()
         {
-            var testContext = new TestContext();
-            testContext.Database.EnsureCreated();
+            Migrate();
+            HappyPath();
+            SadPath();
+        }
 
-            // Happy path
+        private static void Migrate()
+        {
+            using var dbContext = new TestContext();
+            dbContext.Database.EnsureCreated();
+        }
+
+        private static void HappyPath()
+        {
+            using var dbContext = new TestContext();
             var parentId = AddParent();
-            var parent = testContext.Parents
+            var parent = dbContext.Parents
                 // Reload the parent without loading SpecialChild
                 .Single(p => p.Id == parentId);
-            testContext.Remove(parent);
-            testContext.SaveChanges();
+            dbContext.Remove(parent);
+            dbContext.SaveChanges();
+        }
 
-            // Sad path
-            parentId = AddParent();
-            parent = testContext.Parents
+        private static void SadPath()
+        {
+            using var dbContext = new TestContext();
+            var parentId = AddParent();
+            var parent = dbContext.Parents
                 // Reload the parent, but this time, load SpecialChild
                 .Include(p => p.SpecialChild)
                 .Single(p => p.Id == parentId);
-            testContext.Remove(parent);
+            dbContext.Remove(parent);
             // Exception is thrown here
-            testContext.SaveChanges(); 
+            dbContext.SaveChanges();
         }
 
         private static int AddParent()
         {
-            var testContext = new TestContext();
+            var dbContext = new TestContext();
 
             var child = new Child();
-            testContext.Add(child);
-            testContext.SaveChanges();
+            dbContext.Add(child);
+            dbContext.SaveChanges();
 
             var child2 = new Child();
-            testContext.Add(child2);
-            testContext.SaveChanges();
+            dbContext.Add(child2);
+            dbContext.SaveChanges();
 
             // Reloading children from another context is needed to avoid cirular reference errors on saving parent, but that's a separate issue (https://github.com/dotnet/efcore/issues/11888#issuecomment-386395972)
-            testContext.Dispose();
-            testContext = new TestContext();
-            child = testContext.Children.Find(child.Id);
-            child2 = testContext.Children.Find(child2.Id);
+            dbContext.Dispose();
+            dbContext = new TestContext();
+            child = dbContext.Children.Find(child.Id);
+            child2 = dbContext.Children.Find(child2.Id);
 
             var parent = new Parent
             {
                 SpecialChild = child,
                 Children = new List<Child> { child, child2 }
             };
-            testContext.Add(parent);
-            testContext.SaveChanges();
+            dbContext.Add(parent);
+            dbContext.SaveChanges();
             return parent.Id;
         }
     }
