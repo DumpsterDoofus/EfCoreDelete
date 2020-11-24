@@ -24,7 +24,6 @@ namespace EfCoreDeleteBug
             using var dbContext = new TestContext();
             var parentId = AddParent();
             var parent = dbContext.Parents
-                // Reload the parent without loading SpecialChild
                 .Single(p => p.Id == parentId);
             dbContext.Remove(parent);
             dbContext.SaveChanges();
