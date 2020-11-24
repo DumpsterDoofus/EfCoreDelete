@@ -10,7 +10,7 @@ namespace EfCoreDeleteBug
         {
             Migrate();
             HappyPath();
-            SadPath();
+            SadPathThatThrows();
         }
 
         private static void Migrate()
@@ -30,7 +30,7 @@ namespace EfCoreDeleteBug
             dbContext.SaveChanges();
         }
 
-        private static void SadPath()
+        private static void SadPathThatThrows()
         {
             using var dbContext = new TestContext();
             var parentId = AddParent();
