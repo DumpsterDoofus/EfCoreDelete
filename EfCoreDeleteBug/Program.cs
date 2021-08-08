@@ -46,27 +46,21 @@ namespace EfCoreDeleteBug
         {
             var dbContext = new TestContext();
 
-            var child = new Child();
-            dbContext.Add(child);
-            dbContext.SaveChanges();
-
+            var child1 = new Child();
             var child2 = new Child();
-            dbContext.Add(child2);
+            dbContext.Children.AddRange(child1, child2);
             dbContext.SaveChanges();
 
-            // Reloading children from another context is needed to avoid cirular reference errors on saving parent, but that's a separate issue (https://github.com/dotnet/efcore/issues/11888#issuecomment-386395972)
-            dbContext.Dispose();
-            dbContext = new TestContext();
-            child = dbContext.Children.Find(child.Id);
-            child2 = dbContext.Children.Find(child2.Id);
+            // Saving in two steps is needed to avoid cirular reference errors on saving parent, but that's a separate issue: https://github.com/dotnet/efcore/issues/11888#issuecomment-386395972
 
             var parent = new Parent
             {
-                SpecialChild = child,
-                Children = new List<Child> { child, child2 }
+                Children = new List<Child> { child1, child2 },
+                SpecialChild = child1
             };
-            dbContext.Add(parent);
+            dbContext.Parents.Add(parent);
             dbContext.SaveChanges();
+
             return parent.Id;
         }
     }
